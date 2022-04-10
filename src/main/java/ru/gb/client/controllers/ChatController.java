@@ -6,10 +6,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 
+import java.io.*;
 import java.text.DateFormat;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
+import java.util.*;
 
 public class ChatController {
 
@@ -34,6 +33,10 @@ public class ChatController {
         usersList.setItems(FXCollections.observableArrayList("Тимофей", "Дмитрий", "Диана", "Арман"));
         sendButton.setOnAction(event -> sendMessage());
         inputField.setOnAction(event -> sendMessage());
+        List<String> messageHistory = getChatHistory();
+        for (int i = messageHistory.size() - 100; i < messageHistory.size(); i++) {
+            chatHistory.appendText(messageHistory.get(i) + System.lineSeparator());
+        }
 
         usersList.setCellFactory(lv -> {
             MultipleSelectionModel<String> selectionModel = usersList.getSelectionModel();
@@ -90,6 +93,8 @@ public class ChatController {
         chatHistory.appendText(message);
         chatHistory.appendText(System.lineSeparator());
         chatHistory.appendText(System.lineSeparator());
+
+        updateChatHistory(message);
     }
 
     public void appendServerMessage(String serverMessage) {
@@ -111,5 +116,30 @@ public class ChatController {
             usersList.getItems().clear();
             Collections.addAll(usersList.getItems(), users);
         }
+    }
+
+    public void updateChatHistory(String message) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/main/resources/lib/history_"
+                + usernameTitle, true));) {
+            writer.write(message + System.lineSeparator());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public List<String> getChatHistory() {
+        List<String> messageHistory = new ArrayList<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/lib/history_"
+                + usernameTitle))){
+            String message;
+            while ((message = reader.readLine()) != null) {
+                messageHistory.add(message);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return messageHistory;
     }
 }
